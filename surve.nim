@@ -3,20 +3,31 @@ import gcap
 
 var basePage: string
 var s: string
+var dataFile = "participant_data.json"
 var port: int = 8080
 
 var cmd = newCmdLine("Survey Surver", "0.0.1")
-cmd.add(newValueArg[string]("s", "survey", "survey source file", true, s))
+cmd.add(newValueArg[string]("s", "survey", "survey source list", true, s))
+cmd.add(newValueArg[string]("d", "data", "data file to store results in (will be appended to if it exists, created if it doesn't -- defaults to 'participant_data.json')", false, dataFile))
 cmd.add(newValueArg[int]("p", "port", "port to surve on", false, port))
 cmd.parse()
 
 basePage = readFile("index.html")
 var surveys = parseJson(readFile(s))
-
-var participant_data = parseJson(readFile("participant_data.json"))
-echo($participant_data.len & " pre-existing entries found in data file")
-
+var participant_data: JsonNode
 var server = newAsyncHttpServer()
+
+proc loadData(filename: string): JsonNode = 
+  try:
+    return parseJson(readFile(filename))
+  except JsonParsingError:
+    echo("ERROR: JsonParsingError in file '" & filename & "'")
+    raise
+  except IOError:
+    return %*[]
+  except:
+    echo("ERROR: Unknown exception raised when trying to load file: '" & filename & "'")
+    raise
 
 proc doCmd(cmd: string, data: string): string =
   echo(cmd)
@@ -59,7 +70,7 @@ proc doCmd(cmd: string, data: string): string =
         echo("Processing: '" & $k & "' : " & $v)
         participant[].add(k, v)
 
-      writeFile("participant_data.json", participant_data.pretty)
+      writeFile(dataFile, participant_data.pretty)
       echo($participant_data)
       return $(%* {"satus": "success"})
 
@@ -78,6 +89,9 @@ proc cb(req: Request) {.async, gcsafe.} =
       await req.respond(Http404, "Not found, yo!")
   else:
     await req.respond(Http200, basePage)
+
+participant_data  = loadData(dataFile)
+echo($participant_data.len & " pre-existing entries found in data file")
 
 waitFor server.serve(Port(port), cb)
 
