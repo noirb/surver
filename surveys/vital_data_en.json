@@ -1,0 +1,27 @@
+{
+  "title": "Personal Attributes",
+  "type" : "vitaldata",
+  "fields": [
+    {
+      "name": "Age",
+      "field": "age",
+      "type": "number"
+    },
+    {
+      "name": "Sex",
+      "field": "sex",
+      "type": "string"
+    },
+    {
+      "name": "Height",
+      "field": "height",
+      "type": "number",
+      "note": "cm"
+    },
+    {
+      "name": "Participated in previous experiment?",
+      "field": "previousparticipant",
+      "type": "bool"
+    }
+  ]
+}

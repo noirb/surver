@@ -1,0 +1,43 @@
+{
+  "title": "NASA Task Load Index",
+  "type" : "tlx",
+  "scales_range": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 80, 85, 90, 95, 100],
+  "scales": [
+    {
+      "title": "Mental Demand",
+      "explanation": "How mentally demanding was the task?",
+      "min": "Very Low",
+      "max": "Very High"
+    },
+    {
+      "title": "Physical Demand",
+      "explanation": "How physically demanding was the task?",
+      "min": "Very Low",
+      "max": "Very High"
+    },
+    {
+      "title": "Temporal Demand",
+      "explanation": "How hurried or rushed was the pace of the task?",
+      "min": "Very Low",
+      "max": "Very High"
+    },
+    {
+      "title": "Performance",
+      "explanation": "How successful were you in accomplishing what you were asked to do?",
+      "min": "Perfect",
+      "max": "Failure"
+    },
+    {
+      "title": "Effort",
+      "explanation": "How hard did you have to work to accomplish your level of performance?",
+      "min": "Very Low",
+      "max": "Very High"
+    },
+    {
+      "title": "Frustration",
+      "explanation": "How insecure, discouraged, irritated, stressed, and annoyed were you?",
+      "min": "Very Low",
+      "max": "Very High"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+[
+  {
+    "id": 2,
+    "group": "A",
+    "age": "123",
+    "sex": "F",
+    "height": "321",
+    "previousparticipant": false,
+    "surveys": [
+      {
+        "scenario": 1,
+        "answers": [
+          3,
+          2,
+          1,
+          -1,
+          -2,
+          -3
+        ]
+      },
+      {
+        "scenario": 2,
+        "answers": [
+          -3,
+          -2,
+          -1,
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "TLX": {
+      "rankings": [
+        "effort",
+        "frustration",
+        "physical demand",
+        "effort",
+        "performance",
+        "temporal demand",
+        "performance",
+        "temporal demand",
+        "effort",
+        "mental demand",
+        "temporal demand",
+        "mental demand",
+        "physical demand",
+        "effort",
+        "mental demand"
+      ],
+      "surveys": [
+        {
+          "scenario": 1,
+          "answers": {
+            "mental demand": 100,
+            "physical demand": 85,
+            "temporal demand": 95,
+            "performance": 80,
+            "effort": 75,
+            "frustration": 50
+          }
+        },
+        {
+          "scenario": 2,
+          "answers": {
+            "mental demand": 5,
+            "physical demand": 15,
+            "temporal demand": 25,
+            "performance": 40,
+            "effort": 45,
+            "frustration": 50
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width,initial-scale=1,minimal-ui" name="viewport">
+    <title>SURVEY!</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic|Material+Icons">
+    <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/vue-material.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/theme/default.css">
+
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/vue-material@beta"></script>
+
+    <script type="text/javascript" src="js/paper-full.min.js"></script>
+    <script type="text/javascript">
+        var loadJSON = function(callback) {
+            var xobj = new XMLHttpRequest();
+            xobj.overrideMimeType("application/json");
+            xobj.open('GET', 'all_trials_data.json', true);
+            xobj.onreadystatechange = function() {
+                if (xobj.readyState == 4 && xobj.status == "200") {
+                    callback(JSON.parse(xobj.responseText));
+                }
+            };
+            xobj.send(null);
+        };
+
+        var postData = function(uri, data, callback) {
+            var xobj = new XMLHttpRequest();
+            xobj.overrideMimeType("application/json");
+            xobj.open('POST', uri, true);
+            xobj.onreadystatechange = function() {
+                if (xobj.readyState == 4 && xobj.status == "200") {
+                    callback(JSON.parse(xobj.responseText));
+                }
+            };
+            xobj.send(data);
+        };
+
+        var forceResize = function(delay = 0)
+        {
+            var evt = window.document.createEvent('UIEvents');
+            evt.initUIEvent('resize', true, false, window, 0);
+            setTimeout(function(){window.dispatchEvent(evt);}, delay);
+        }
+    </script>
+</head>
+<body>
+  <div id="main-content">
+      <template>
+      <div style="width:50%;margin:auto">
+          <md-card :hidden="curr_survey.type != 'likert' && curr_survey.type != 'tlx' && curr_survey.type != 'tlxranking'" style="overflow:hidden">
+              <md-card-header v-if="Object.keys(curr_survey).length">
+                <div class="md-title" v-if="curr_survey.scales">{{curr_survey.scales[curr_question].title}}</div>
+                <div class="md-title" v-if="curr_survey.type == 'tlxranking'">Which of these two is more important to you?</div>
+                <div class="md-subtitle" v-if="curr_survey.scales && curr_survey.scales[curr_question].explanation">{{curr_survey.scales[curr_question].explanation}}</div>
+              </md-card-header>
+              <div style="width:768px; height:256px;">
+                <canvas id="survey-canvas" ref="surveyCanvas" style="width:100%; height: 100%;" resize data-paper-resize="true" width="768" height="256" ></canvas>
+              </div>
+              <md-progress-bar md-mode="determinate" v-if="Object.keys(curr_survey).length > 0 && curr_survey.scales" :md-value="100 * ((curr_question+1) / curr_survey.scales.length)"></md-progress-bar>
+
+              <md-card-actions>
+                <md-button disabled class="md-raised md-primary" v-on:click="nextQuestion()" ref="nextBtn">Next <md-icon>arrow_forward</md-icon></md-button>
+              </md-card-actions>
+          </md-card>
+
+          <md-card v-if="curr_survey.type && curr_survey.type == 'message'">
+            <md-card-header>
+                <div class="md-title">{{curr_survey.title}}</div>
+                <div class="md-subtitle">{{curr_survey.message}}</div>
+            </md-card-reader>
+
+            <md-card-actions v-if="curr_survey_idx < surveyOrder.length-1">
+                <md-button class="md-raised md-accent" v-on:click="nextSurvey()" ref="nextSurvBtn">Continue When Instructed</md-button>
+            </md-card-actions>
+          </md-card>
+
+          <md-card v-if="curr_survey.type && curr_survey.type == 'vitaldata'">
+              <md-card-header v-if="Object.keys(curr_survey).length">
+                <div class="md-title">{{curr_survey.title}}</div>
+                <div class="md-subtitle">Please fill in your vital stats</div>
+              </md-card-header>
+
+             <div style="margin: 40px; float:left; width: 50%;">
+                <md-field>
+                  <label>Age</label>
+                  <md-input name="participant-age" id="participant-age" v-model="participant_data.age" type="number" />
+                </md-field>
+                <md-field>
+                  <label>Sex</label>
+                  <md-select name="participant-sex" id="participant-sex" v-model="participant_data.sex" md-dense>
+                    <md-option></md-option>
+                    <md-option value="M">M</md-option>
+                    <md-option value="F">F</md-option>
+                  </md-select>
+                </md-field>
+                <md-field>
+                  <label>Height (cm)</label>
+                  <md-input name="participant-height" id="participant-height" v-model="participant_data.height" type="number" />
+                  <span class="md-suffix">cm</span>
+                </md-field>
+                <md-checkbox v-model="participant_data.previousparticipant">Participated in previous box turning experiments?</md-checkbox>
+             </div> 
+              <md-card-actions>
+                <md-button :disabled="participant_data.age == null || participant_data.sex == null || participant_data.height == null" class="md-raised md-primary" v-on:click="nextSurvey()" >Next <md-icon>arrow_forward</md-icon></md-button>
+              </md-card-actions>
+          </md-card>
+
+          <md-snackbar md-position="center" :md-duration="Infinity" :md-active="participant_data.id != null">
+            <h2 v-if="participant_data.id != null">ID: <span style="color:#75a2ea">{{participant_data.id}}</span></h2> <h2>Group: <span style="color:#5beacd">{{participant_data.group}}</span></h2>
+          </md-snackbar>
+        </div>
+      </template>
+  </div>
+
+    <script>
+      paper.install(window);
+      console.log(VueMaterial);
+      Vue.use(VueMaterial.default);
+
+      var initCanvas = function(canvas)
+      {
+        var scope = new paper.PaperScope();
+        scope.setup( canvas );
+        scope.activate();
+
+        // temp red dot
+        var c = new Path.Circle(paper.view.center, 45);
+        c.fillColor = 'red';
+        c.strokeColor = 'purple';
+
+        scope.view.draw();
+        return scope;
+      }
+
+
+      var data = {
+        participant_data: {
+            age: null,
+            sex: null,
+            height: null,
+            previousparticipant: false,
+            group: "A",
+            surveys: [],
+            TLX: {
+                rankings: [],
+                surveys: []
+            }
+        },
+        curr_survey: {},
+        curr_survey_idx : 0,
+        curr_question: 0,
+        visualizations: {},
+        surveyOrder: [
+            {
+                name: 'vitaldata_en'
+            },
+            {
+                name: 'boxbot_en'
+            },
+            {
+                name: 'nasa_tlx_en'
+            },
+            {
+                name: 'pause'
+            },
+            {
+                name: 'boxbot_en'
+            },
+            {
+                name: 'nasa_tlx_en'
+            },
+            {
+                name: 'nasa_tlx_ranking_en'
+            },
+            {
+                name: 'finished'
+            }
+        ]
+      };
+      var vm = new Vue({
+        el: '#main-content',
+        data: data,
+        methods: {
+          drawLikert: function(scope, selectionCallback) {
+            scope.activate();
+            scope.project.activeLayer.removeChildren();
+            var radius = 40;
+            var padding = 50;
+            var selections = [];
+            this.curr_survey.scales_range.forEach((val,idx)=> {
+              selections.push(new Path.Circle(new Point(idx * ((scope.project.view.size.width-(2*padding)) / this.curr_survey.scales_range.length) + radius + padding, scope.project.view.center.y), radius)); 
+              selections[selections.length-1].strokeColor = 'black';
+              selections[selections.length-1].fillColor = 'white';
+              selections[selections.length-1].strokeWidth = 5;
+              selections[selections.length-1].name = 'selection_' + idx.toString() + new Date().getTime().toString();
+              selections[selections.length-1].value = this.curr_survey.scales_range[idx];
+              selections[selections.length-1].onMouseEnter = function(event) { if (!this.userSelected) this.fillColor = new Color('#73bc97'); };
+              selections[selections.length-1].onMouseLeave = function(event) { if (!this.userSelected) this.fillColor = 'white'; };
+              selections[selections.length-1].onMouseDown  = function(event) { if (!this.userSelected) this.fillColor = new Color('#8be5b8'); };
+              selections[selections.length-1].onMouseUp    = function(event) {
+                if (!this.userSelected)
+                {
+                  selections.forEach(function(s) { s.fillColor = 'white'; s.userSelected = false; });
+                  this.fillColor = new Color('#5d8cd8');
+                  this.userSelected = true;
+                  selectionCallback(this.value);
+                }
+              }; 
+            });
+            var bgLine = new Path.Line(selections[0].position, selections[selections.length-1].position);
+            bgLine.strokeWidth = 5;
+            bgLine.strokeColor = 'black';
+            bgLine.sendToBack();
+
+            var txtMin = new PointText(selections[0].position);
+            txtMin.position.y += radius*2;
+            txtMin.fontWeight = 'bold';
+            txtMin.fillColor = new Color(0.25, 0.25, 0.25);
+            txtMin.justification = 'center';
+            txtMin.content = this.curr_survey.scales[this.curr_question].min
+            var txtMax = new PointText(selections[selections.length-1].position);
+            txtMax.position.y += radius*2;
+            txtMax.fontWeight = 'bold';
+            txtMax.fillColor = new Color(0.25, 0.25, 0.25);
+            txtMax.justification = 'center';
+            txtMax.content = this.curr_survey.scales[this.curr_question].max
+
+            scope.project.view.draw();
+            console.log('Question vis update complete');
+          },
+          drawTLX: function(scope, selectionCallback) {
+            console.log("Drawing tlx...");
+            scope.activate();
+            scope.project.activeLayer.removeChildren();
+            var entryWidth = 30;
+            var entryHeight = 30;
+            var padding = 50;
+            var selections = [];
+            var lines = [];
+            this.curr_survey.scales_range.forEach((val,idx)=> {
+              if (idx >= 1)
+              {
+                  selections.push(new Path.Rectangle(
+                    new Point(idx * entryWidth + padding, scope.project.view.center.y),
+                    new Size(entryWidth, entryHeight)
+                  )); 
+                  selections[selections.length-1].fillColor = 'white';
+                  selections[selections.length-1].strokeWidth = 2;
+                  selections[selections.length-1].name = 'selection_' + idx.toString() + new Date().getTime().toString();
+                  selections[selections.length-1].value = this.curr_survey.scales_range[idx];
+                  selections[selections.length-1].onMouseEnter = function(event) { if (!this.userSelected) this.fillColor = new Color('#73bc97'); };
+                  selections[selections.length-1].onMouseLeave = function(event) { if (!this.userSelected) this.fillColor = 'white'; };
+                  selections[selections.length-1].onMouseDown  = function(event) { if (!this.userSelected) this.fillColor = new Color('#8be5b8'); };
+                  selections[selections.length-1].onMouseUp    = function(event) {
+                    if (!this.userSelected)
+                    {
+                      selections.forEach(function(s) { s.fillColor = 'white'; s.userSelected = false; });
+                      this.fillColor = new Color('#5d8cd8');
+                      this.userSelected = true;
+                      selectionCallback(this.value);
+                    }
+                  }; 
+                  lines.push(new Path.Line(
+                    new Point(idx * entryWidth + padding, scope.project.view.center.y + (this.curr_survey.scales_range[idx] === 50 ? entryHeight*-0.5 : 0)),
+                    new Point(idx * entryWidth + padding, scope.project.view.center.y + entryHeight)
+                  ));
+                  lines[lines.length-1].strokeWidth = 2;
+                  lines[lines.length-1].strokeColor = 'black';
+                  }
+            });
+            lines.push(new Path.Line(
+                new Point(lines.length * entryWidth + padding, scope.project.view.center.y),
+                new Point(lines.length * entryWidth + padding, scope.project.view.center.y + entryHeight)
+            ));
+            lines[lines.length-1].strokeWidth = 2;
+            lines[lines.length-1].strokeColor = 'black';
+            lines.push(new Path.Line(
+                new Point(lines.length * entryWidth + padding, scope.project.view.center.y),
+                new Point(lines.length * entryWidth + padding, scope.project.view.center.y + entryHeight)
+            ));
+            lines[lines.length-1].strokeWidth = 2;
+            lines[lines.length-1].strokeColor = 'black';
+            var underBar = new Path.Line(
+                new Point(padding + entryWidth, scope.project.view.center.y + entryHeight),
+                new Point(lines.length * entryWidth + padding - entryWidth, scope.project.view.center.y + entryHeight)
+            );
+            underBar.strokeWidth = 2;   
+            underBar.strokeColor = 'black';
+
+            var txtMin = new PointText(lines[0].position);
+            txtMin.position.y += entryHeight;
+            txtMin.fontWeight = 'bold';
+            txtMin.fillColor = new Color(0.25, 0.25, 0.25);
+            txtMin.justification = 'center';
+            txtMin.content = this.curr_survey.scales[this.curr_question].min
+            var txtMax = new PointText(lines[lines.length-1].position);
+            txtMax.position.y += entryHeight;
+            txtMax.fontWeight = 'bold';
+            txtMax.fillColor = new Color(0.25, 0.25, 0.25);
+            txtMax.justification = 'center';
+            txtMax.content = this.curr_survey.scales[this.curr_question].max
+
+
+            scope.project.view.draw();
+          },
+          drawTLXRanking: function(scope, selectionCallback) {
+            console.log("Drawing tlx ranking...");
+            scope.activate();
+            scope.project.activeLayer.removeChildren();
+            var entryWidth = 140;
+            var entryHeight = 100;
+            var padding = scope.project.view.size.width / 3;
+            var selections = [];
+            var txts = [];
+            var defaultFill = new Color('#d5dbe2');
+            var hoverFill = new Color('#73bc97');
+            var downFill = new Color('#8be5b8');
+            var defaultBorder = new Color('#586660');
+            var hoverBorder = new Color('#e1f4ec');
+            this.curr_survey.scales[this.curr_question].forEach((val,idx)=> {
+              var rect = new Path.Rectangle(
+                new Point(idx < 1 ? scope.project.view.bounds.left + entryWidth*0.5 : scope.project.view.bounds.right - entryWidth*2, scope.project.view.bounds.top + 10),
+                new Size(entryWidth, entryHeight)
+              );
+              rect.fillColor = defaultFill;
+              rect.strokeWidth = 2;
+              rect.strokeColor = defaultBorder;
+              rect.name = 'selection_' + idx.toString() + new Date().getTime().toString();
+              rect.value = this.curr_survey.scales[this.curr_question][idx];
+
+              var txt = new PointText(rect.position);
+              txt.fontWeight = 'bold';
+              txt.fillColor = defaultBorder;
+              txt.justification = 'center';
+              txt.content = this.curr_survey.scales[this.curr_question][idx]
+              txts.push(txt);
+
+              var onHover = function(event) {
+                 if (!rect.userSelected)
+                 {
+                    rect.fillColor = hoverFill;
+                    rect.strokeColor = hoverBorder;
+                    txt.fillColor = hoverBorder;
+                 }
+              };
+              var onLeave = function(event) {
+                if (!rect.userSelected)
+                {
+                    rect.fillColor = defaultFill;
+                    rect.strokeColor = defaultBorder;
+                    txt.fillColor = defaultBorder;
+                }
+              };
+              var onDown = function(event) {
+                if (!rect.userSelected) {
+                    rect.fillColor = downFill;
+                }
+              };
+              var onSelect = function(event) {
+                  if (!rect.userSelected) {
+                    selections.forEach(function(s) { s.fillColor = defaultFill; s.strokeColor = defaultBorder; s.userSelected = false; });
+                    txts.forEach(function(t) { t.fillColor = defaultBorder; });
+                    rect.fillColor = new Color('#5d8cd8');
+                    txt.fillColor = hoverBorder;
+                    rect.userSelected = true;
+                    selectionCallback(rect.value);
+                  }
+              };
+              rect.onMouseEnter = onHover;
+              rect.onMouseLeave = onLeave;
+              rect.onMouseUp    = onSelect;
+              rect.onMouseDown  = onDown;
+              txt.onMouseEnter  = onHover;
+              txt.onMouseUp     = onSelect;
+              txt.onMouseDown   = onDown;
+
+              var description = new PointText(new Point(rect.position.x - entryWidth+16, rect.position.y + entryHeight*0.5 + 20));
+              // break description into lines
+              var maxLineLen = 40;
+              var last = 0;
+              while(1) {
+                if (maxLineLen + last > this.curr_survey.descriptions[this.curr_survey.scales[this.curr_question][idx]].length)
+                {
+                    description.content += this.curr_survey.descriptions[this.curr_survey.scales[this.curr_question][idx]].substr(last);
+                    break;
+                }
+
+                var br = this.curr_survey.descriptions[this.curr_survey.scales[this.curr_question][idx]].lastIndexOf(' ', maxLineLen + last);
+                if (br === -1 && last < this.curr_survey.descriptions[this.curr_survey.scales[this.curr_question][idx]].length)
+                {
+                    description.content += this.curr_survey.descriptions[this.curr_survey.scales[this.curr_question][idx]].substring(last);
+                    break;
+                }
+                else if (br === -1)
+                {
+                    break;
+                }
+                else
+                {
+                    description.content += this.curr_survey.descriptions[this.curr_survey.scales[this.curr_question][idx]].substring(last, br) + '\n';
+                }
+                last = br+1;
+              }
+
+              rect.addChild(txt);
+              selections.push(rect);
+            });
+            var midTxt = new PointText(new Point(0.5 * (selections[selections.length-1].position.x - selections[0].position.x) + selections[0].position.x,
+                                                 selections[0].position.y));
+            midTxt.content = 'OR';
+            midTxt.fillColor = defaultBorder;
+            midTxt.fontWeight = 'bold';
+            midTxt.justification = 'center';
+
+            scope.project.view.draw();
+          },
+          loadSurvey: function(survey, onAnswer) {
+            console.log('Loading survey: ', survey);
+            postData('$get_survey', '{"survey":"' + survey + '"}', (res)=> {
+                if (res.status == "success")
+                {
+                    vm.$set(vm, 'curr_survey', res.survey);
+                    vm.$set(vm, 'curr_question', 0)
+                    if (res.survey.type == 'likert')
+                    {
+                        forceResize();
+                        var scenario = -1;
+                        if (vm.participant_data.surveys.length > 0)
+                            scenario = vm.participant_data.surveys[vm.participant_data.surveys.length-1].scenario === 1 ? 2 : 1;
+                        else
+                            scenario = vm.participant_data.group == "A" ? 1 : 2;
+
+                        vm.participant_data.surveys.push({ 
+                            scenario: scenario,
+                            answers: []
+                        });
+                        vm.drawLikert(this.paperscope, function(v) { 
+                            console.log(vm.curr_question, v);
+                            vm.$refs.nextBtn.disabled = false;
+                            vm.participant_data.surveys[vm.participant_data.surveys.length-1].answers[vm.curr_question] = v;
+                         });
+                        forceResize();
+                    }
+                    else if (res.survey.type == 'tlx')
+                    {
+                        var scenario = -1;
+                        if (vm.participant_data.TLX.surveys.length > 0)
+                            scenario = vm.participant_data.TLX.surveys[vm.participant_data.TLX.surveys.length-1].scenario === 1 ? 2 : 1;
+                        else
+                            scenario = vm.participant_data.group == "A" ? 1 : 2;
+
+                        vm.participant_data.TLX.surveys.push({
+                            scenario: scenario,
+                            answers: {}
+                        });
+
+                        forceResize();
+                        vm.drawTLX(this.paperscope, function(v) {
+                            console.log(vm.curr_question, v);
+                            vm.$refs.nextBtn.disabled = false;
+                            vm.participant_data.TLX.surveys[vm.participant_data.TLX.surveys.length-1].answers[vm.curr_survey.scales[vm.curr_question].title.toLowerCase()] = v;
+                        });
+                    }
+                    else if (res.survey.type == 'tlxranking')
+                    {
+                        forceResize();
+                        vm.drawTLXRanking(this.paperscope, function(v) {
+                            console.log(vm.curr_question, v.toLowerCase());
+                            vm.$refs.nextBtn.disabled = false;
+                            vm.participant_data.TLX.rankings.push(v.toLowerCase());
+                        });
+                    }
+                }
+                else
+                {
+                    console.log(res.status);
+                }
+            });
+          },
+          nextSurvey: function() {
+            if (this.curr_survey_idx < this.surveyOrder.length-1)
+            {
+              this.curr_survey_idx++;
+
+              // submit results to server
+              if (this.surveyOrder[this.curr_survey_idx].name == "finished")
+              {
+                postData('$submit_result', JSON.stringify(this.participant_data), function(res){ console.log(res); });
+              }
+
+              this.loadSurvey(this.surveyOrder[this.curr_survey_idx].name);
+            }
+          },
+          nextQuestion: function() {
+            if (this.curr_question < this.curr_survey.scales.length-1)
+            {
+                this.curr_question++;
+                this.$refs.nextBtn.disabled = true;
+
+                if (this.curr_survey.type == 'likert')
+                {
+                    this.drawLikert(this.paperscope, function(v) {
+                        console.log(vm.curr_question, v);
+                        vm.participant_data.surveys[vm.participant_data.surveys.length-1].answers[vm.curr_question] = v;
+                        vm.$refs.nextBtn.disabled = false;
+                     });
+                }
+                else if (this.curr_survey.type == 'tlx')
+                {
+                    this.drawTLX(this.paperscope, function(v) {
+                        console.log(vm.curr_question, v);
+                        vm.participant_data.TLX.surveys[vm.participant_data.TLX.surveys.length-1].answers[vm.curr_survey.scales[vm.curr_question].title.toLowerCase()] = v;
+                        vm.$refs.nextBtn.disabled = false;
+                    });
+                }
+                else if (this.curr_survey.type == 'tlxranking')
+                {
+                    this.drawTLXRanking(this.paperscope, function(v) {
+                        vm.participant_data.TLX.rankings.push(v.toLowerCase());
+                        vm.$refs.nextBtn.disabled = false;
+                        console.log(vm.curr_question, v.toLowerCase());
+                    });
+                }
+
+                var evt2 = window.document.createEvent('UIEvents');
+                evt2.initUIEvent('resize', true, false, window, 0);
+                setTimeout(function(){window.dispatchEvent(evt2);}, 100);
+            }
+            else
+            {
+                this.nextSurvey();
+            }
+          }
+        },
+        watch: {
+        },
+        created: function() {
+          console.log('Vue created');
+        },
+        mounted: function() {
+          console.log('Vue mounted', this.$refs);
+          this.paperscope = initCanvas(this.$refs.surveyCanvas); //'survey-canvas');
+          postData('$new_user', null, function(uid) { vm.participant_data.id = uid.id; vm.participant_data.group = uid.group; });
+          this.loadSurvey(this.surveyOrder[0].name, function(q, a) {
+             console.log(q, a);
+           });
+        }
+      });
+
+    </script>
+</body>
+</html>
+

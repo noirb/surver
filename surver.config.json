@@ -1,0 +1,10 @@
+{
+  "surveys" : [
+    {"name" : "vitaldata_en", "location": "surveys/vital_data_en.json"},
+    {"name" : "boxbot_en", "location": "surveys/boxbot_survey1_en.json"},
+    {"name" : "nasa_tlx_en", "location": "surveys/nasa_tlx_en.json"},
+    {"name" : "nasa_tlx_ranking_en", "location": "surveys/nasa_tlx_ranking_en.json"},
+    {"name" : "pause", "location": "surveys/pause_en.json"},
+    {"name" : "finished", "location": "surveys/finished_en.json"}
+  ]
+}

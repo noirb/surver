@@ -1,0 +1,37 @@
+{
+  "title": "BoxBot Evaluation Survey",
+  "type" : "likert",
+  "scales_range": [-3, -2, -1, 1, 2, 3],
+  "scales": [
+    {
+      "title": "I feel like my partner was helpful.",
+      "min": "Strongly Disagree",
+      "max": "Strongly Agree"
+    },
+    {
+      "title": "I felt comfortable working with my partner.",
+      "min": "Strongly Disagree",
+      "max": "Strongly Agree"
+    },
+    {
+      "title": "I was often uncertain about what my partner would do next.",
+      "min": "Strongly Disagree",
+      "max": "Strongly Agree"
+    },
+    {
+      "title": "I thought I might drop the box.",
+      "min": "Strongly Disagree",
+      "max": "Strongly Agree"
+    },
+    {
+      "title": "I thought my partner might drop the box.",
+      "min": "Strongly Disagree",
+      "max": "Strongly Agree"
+    },
+    {
+      "title": "I thought it was very easy to complete the task together with my partner.",
+      "min": "Strongly Disagree",
+      "max": "Strongly Agree"
+    }
+  ]
+}
