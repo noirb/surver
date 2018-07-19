@@ -485,11 +485,8 @@
             {
               this.curr_survey_idx++;
 
-              // submit results to server
-              if (this.surveyOrder[this.curr_survey_idx].name == "finished")
-              {
-                postData('$submit_result', JSON.stringify(this.participant_data), function(res){ console.log(res); });
-              }
+              // submit results to server after each survey step
+              postData('$submit_result', JSON.stringify(this.participant_data), function(res){ console.log(res); });
 
               this.loadSurvey(this.surveyOrder[this.curr_survey_idx].name);
             }
