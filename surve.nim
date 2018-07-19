@@ -13,6 +13,8 @@ cmd.add(newValueArg[int]("p", "port", "port to surve on", false, port))
 cmd.parse()
 
 basePage = readFile("index.html")
+
+echo("Loading survey data from: " & s)
 var surveys = parseJson(readFile(s))
 var participant_data: JsonNode
 var server = newAsyncHttpServer()
@@ -55,23 +57,22 @@ proc doCmd(cmd: string, data: string): string =
       # find matching id entry
       var participant: ptr JsonNode = nil
       var jdata = parseJson(data)
-      echo("Parsed json [" & $jdata.kind & "]: " & $jdata)
-      echo("Searching for id... " & $jdata["id"])
+      echo("\tParsed json [" & $jdata.kind & "]: " & $jdata)
+      echo("\tSearching for id... " & $jdata["id"])
       for p in participant_data.mitems:
-        echo($p)
         if p["id"].getInt() == jdata["id"].getInt():
-            echo("Found participant : " & $jdata["id"])
+            echo("\t\tFound participant : " & $jdata["id"])
             participant = addr p
             break
 
       if participant == nil:
         return $(%* {"status": "Failed: Unknown participant"})
       for k,v in jdata:
-        echo("Processing: '" & $k & "' : " & $v)
+        echo("\t\tProcessing: '" & $k & "' : " & $v)
         participant[].add(k, v)
 
       writeFile(dataFile, participant_data.pretty)
-      echo($participant_data)
+      echo("\t" & $participant_data)
       return $(%* {"satus": "success"})
 
   return $(%* {"status": "Failed: Unknown command"})
