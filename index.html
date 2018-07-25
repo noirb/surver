@@ -50,6 +50,8 @@
   <div id="main-content">
       <template>
       <div style="width:50%;margin:auto">
+          <md-dialog :md-active.sync="working" :md-close-on-esc="false" :md-click-outside-to-close="false" ><md-dialog-title>Working...</md-dialog-title></md-dialog>
+
           <md-card :hidden="curr_survey.type != 'likert' && curr_survey.type != 'tlx' && curr_survey.type != 'tlxranking'" style="overflow:hidden">
               <md-card-header v-if="Object.keys(curr_survey).length">
                 <div class="md-title" v-if="curr_survey.scales">{{curr_survey.scales[curr_question].title}}</div>
@@ -66,11 +68,23 @@
               </md-card-actions>
           </md-card>
 
+          <md-card v-if="curr_survey.type && curr_survey.type == 'comments'">
+            <md-card-header v-if="Object.keys(curr_survey).length">
+              <div class="md-title">{{curr_survey.title}}</div>
+            </md-card-header>
+            <md-field>
+              <label>Comments</label>
+              <md-textarea v-model="participant_data.comments"></md-textarea>
+            </md-field>
+            <md-card-actions>
+              <md-button class="md-raised md-primary" v-on:click="nextSurvey()" >Finish <md-icon>arrow_forward</md-icon></md-button>
+            </md-card-actions>
+          </md-card>
           <md-card v-if="curr_survey.type && curr_survey.type == 'message'">
             <md-card-header>
                 <div class="md-title">{{curr_survey.title}}</div>
                 <div class="md-subtitle">{{curr_survey.message}}</div>
-            </md-card-reader>
+            </md-card-header>
 
             <md-card-actions v-if="curr_survey_idx < surveyOrder.length-1">
                 <md-button class="md-raised md-accent" v-on:click="nextSurvey()" ref="nextSurvBtn">Continue When Instructed</md-button>
@@ -101,7 +115,8 @@
                   <md-input name="participant-height" id="participant-height" v-model="participant_data.height" type="number" />
                   <span class="md-suffix">cm</span>
                 </md-field>
-                <md-checkbox v-model="participant_data.previousparticipant">Participated in previous box turning experiments?</md-checkbox>
+                <md-checkbox v-model="participant_data.previousboxparticipant">Participated in previous box turning experiments?</md-checkbox>
+                <md-checkbox v-model="participant_data.previousgazeparticipant">Participated in previous avatar gazing study?</md-checkbox>
              </div> 
               <md-card-actions>
                 <md-button :disabled="participant_data.age == null || participant_data.sex == null || participant_data.height == null" class="md-raised md-primary" v-on:click="nextSurvey()" >Next <md-icon>arrow_forward</md-icon></md-button>
@@ -141,14 +156,17 @@
             age: null,
             sex: null,
             height: null,
-            previousparticipant: false,
+            previousboxparticipant: false,
+            previousgazeparticipant: false,
             group: "A",
             surveys: [],
             TLX: {
                 rankings: [],
                 surveys: []
-            }
+            },
+            comments: null
         },
+        working : false,
         curr_survey: {},
         curr_survey_idx : 0,
         curr_question: 0,
@@ -174,6 +192,9 @@
             },
             {
                 name: 'nasa_tlx_ranking_en'
+            },
+            {
+                name: 'comments'
             },
             {
                 name: 'finished'
@@ -478,9 +499,11 @@
                 {
                     console.log(res.status);
                 }
+                vm.working = false;
             });
           },
           nextSurvey: function() {
+            vm.working = true;
             if (this.curr_survey_idx < this.surveyOrder.length-1)
             {
               this.curr_survey_idx++;
