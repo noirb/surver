@@ -38,7 +38,7 @@
             xobj.send(data);
         };
 
-        var forceResize = function(delay = 0)
+        var forceResize = function(delay = 5)
         {
             var evt = window.document.createEvent('UIEvents');
             evt.initUIEvent('resize', true, false, window, 0);
