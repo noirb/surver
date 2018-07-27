@@ -491,7 +491,7 @@
                         vm.drawTLXRanking(this.paperscope, function(v) {
                             console.log(vm.curr_question, v.toLowerCase());
                             vm.$refs.nextBtn.disabled = false;
-                            vm.participant_data.TLX.rankings.push(v.toLowerCase());
+                            vm.participant_data.TLX.rankings[vm.curr_question] = v.toLowerCase();
                         });
                     }
                 }
@@ -539,7 +539,7 @@
                 else if (this.curr_survey.type == 'tlxranking')
                 {
                     this.drawTLXRanking(this.paperscope, function(v) {
-                        vm.participant_data.TLX.rankings.push(v.toLowerCase());
+                        vm.participant_data.TLX.rankings[vm.curr_question] = v.toLowerCase();
                         vm.$refs.nextBtn.disabled = false;
                         console.log(vm.curr_question, v.toLowerCase());
                     });
