@@ -1,0 +1,32 @@
+{
+  "title": "Godspeed II",
+  "subtitle": "Animiacy",
+  "instructions": "Please rate your impression of the robot on these scales",
+  "scales_range": [1, 2, 3, 4, 5],
+  "scales": [
+    {
+      "min": "Dead",
+      "max": "Alive"
+    },
+    {
+      "min": "Stagnant",
+      "max": "Lively"
+    },
+    {
+      "min": "Mechanical",
+      "max": "Organic"
+    },
+    {
+      "min": "Artificial",
+      "max": "Lifelike"
+    },
+    {
+      "min": "Inert",
+      "max": "Interactive"
+    },
+    {
+      "min": "Apathetic",
+      "max": "Responsive"
+    }
+  ]
+}

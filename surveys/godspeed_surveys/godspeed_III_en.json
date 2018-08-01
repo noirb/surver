@@ -1,0 +1,28 @@
+{
+  "title": "Godspeed III",
+  "subtitle": "Likeability",
+  "instructions": "Please rate your impression of the robot on these scales",
+  "scales_range": [1, 2, 3, 4, 5],
+  "scales": [
+    {
+      "min": "Dislike",
+      "max": "Like"
+    },
+    {
+      "min": "Unfriendly",
+      "max": "Friendly"
+    },
+    {
+      "min": "Unkind",
+      "max": "Kind"
+    },
+    {
+      "min": "Unpleasant",
+      "max": "Pleasant"
+    },
+    {
+      "min": "Awful",
+      "max": "Nice"
+    }
+  ]
+}

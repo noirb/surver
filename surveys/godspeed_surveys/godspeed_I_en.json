@@ -1,0 +1,34 @@
+{
+  "title": "Godspeed I",
+  "type" : "likert",
+  "subtitle": "Anthropomorphism",
+  "instructions": "Please rate your impression of the robot on these scales",
+  "scales_range": [1, 2, 3, 4, 5],
+  "scales": [
+    {
+      "title": "I felt the robot was more...",
+      "min": "Fake",
+      "max": "Natural"
+    },
+    {
+      "title": "I felt the robot was more...",
+      "min": "Machinelike",
+      "max": "Humanlike"
+    },
+    {
+      "title": "I felt the robot was more...",
+      "min": "Unconscious",
+      "max": "Conscious"
+    },
+    {
+      "title": "I felt the robot was more...",
+      "min": "Artificial",
+      "max": "Lifelike"
+    },
+    {
+      "title": "I felt the robot was more...",
+      "min": "Moving rigidly",
+      "max": "Moving elegantly"
+    }
+  ]
+}

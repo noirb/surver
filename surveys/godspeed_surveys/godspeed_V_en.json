@@ -1,0 +1,20 @@
+{
+  "title": "Godspeed V",
+  "subtitle": "Perceived Safety",
+  "instructions": "Please rate your emotional state on these scales",
+  "scales_range": [1, 2, 3, 4, 5],
+  "scales": [
+    {
+      "min": "Anxious",
+      "max": "Relaxed"
+    },
+    {
+      "min": "Calm",
+      "max": "Agitated"
+    },
+    {
+      "min": "Quiescent",
+      "max": "Surprised"
+    }
+  ]
+}
