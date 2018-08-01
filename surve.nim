@@ -8,7 +8,7 @@ var port: int = 8080
 
 var cmd = newCmdLine("Survey Surver", "0.0.2")
 cmd.add(newValueArg[string]("c", "cfg", "surver config file", true, s))
-cmd.add(newValueArg[string]("d", "data", "data file to store results in (will be appended to if it exists, created if it doesn't -- defaults to 'participant_data.json')", false, dataFile))
+cmd.add(newValueArg[string]("d", "data", "data file to store results in (will be appended to if it exists, created if it doesn't -- defaults to '" & dataFile & "')", false, dataFile))
 cmd.add(newValueArg[int]("p", "port", "port to surve on (" & $port & " by default)", false, port))
 cmd.parse()
 
@@ -53,12 +53,19 @@ proc doCmd(cmd: string, data: string): string =
           return $res
       echo("\t...not found")
       return $(%* {"status": "Failed: Unknown survey"})
+    of "list_surveys":
+      var res = %*{"status":"success"}
+      var s = newSeq[string]()
+      for survey in surveys["surveys"]:
+        s.add(survey["name"].getStr())
+      res.add("surveys", %s)
+      return $res
     of "submit_result":
       # find matching id entry
       var participant: ptr JsonNode = nil
       var jdata = parseJson(data)
-      echo("\tParsed json [" & $jdata.kind & "]: " & $jdata)
-      echo("\tSearching for id... " & $jdata["id"])
+      echo("\tParsed json")
+      echo("\tSearching for id " & $jdata["id"] & "...")
       for p in participant_data.mitems:
         if p["id"].getInt() == jdata["id"].getInt():
             echo("\t\tFound participant : " & $jdata["id"])
@@ -68,11 +75,10 @@ proc doCmd(cmd: string, data: string): string =
       if participant == nil:
         return $(%* {"status": "Failed: Unknown participant"})
       for k,v in jdata:
-        echo("\t\tProcessing: '" & $k & "' : " & $v)
         participant[].add(k, v)
 
+      echo ("\tWriting data to output file")
       writeFile(dataFile, participant_data.pretty)
-      echo("\t" & $participant_data)
       return $(%* {"satus": "success"})
 
   return $(%* {"status": "Failed: Unknown command"})
