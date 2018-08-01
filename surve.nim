@@ -6,10 +6,10 @@ var s: string
 var dataFile = "participant_data.json"
 var port: int = 8080
 
-var cmd = newCmdLine("Survey Surver", "0.0.1")
-cmd.add(newValueArg[string]("s", "survey", "survey source list", true, s))
+var cmd = newCmdLine("Survey Surver", "0.0.2")
+cmd.add(newValueArg[string]("c", "cfg", "surver config file", true, s))
 cmd.add(newValueArg[string]("d", "data", "data file to store results in (will be appended to if it exists, created if it doesn't -- defaults to 'participant_data.json')", false, dataFile))
-cmd.add(newValueArg[int]("p", "port", "port to surve on", false, port))
+cmd.add(newValueArg[int]("p", "port", "port to surve on (" & $port & " by default)", false, port))
 cmd.parse()
 
 basePage = readFile("index.html")
