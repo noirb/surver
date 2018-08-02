@@ -12,7 +12,7 @@ cmd.add(newValueArg[string]("d", "data", "data file to store results in (will be
 cmd.add(newValueArg[int]("p", "port", "port to surve on (" & $port & " by default)", false, port))
 cmd.parse()
 
-basePage = readFile("index.html")
+basePage = "index.html"
 
 echo("Loading survey data from: " & s)
 var surveys = parseJson(readFile(s))
@@ -95,7 +95,7 @@ proc cb(req: Request) {.async, gcsafe.} =
     except:
       await req.respond(Http404, "Not found, yo!")
   else:
-    await req.respond(Http200, basePage)
+    await req.respond(Http200, readFile(basePage))
 
 participant_data  = loadData(dataFile)
 echo($participant_data.len & " pre-existing entries found in data file")
