@@ -1,22 +1,32 @@
 {
   "title": "Personal Attributes",
-  "type" : "vitaldata",
+  "type" : "formdata",
   "fields": [
     {
       "name": "Age",
       "field": "age",
-      "type": "number"
+      "type": "number",
+      "required": true
     },
     {
       "name": "Sex",
       "field": "sex",
-      "type": "string"
+      "type": "selection",
+      "options": ["M", "F"],
+      "required": true
+    },
+    {
+      "name": "Personal statement",
+      "field": "statement",
+      "type": "string",
+      "note": "Something short"
     },
     {
       "name": "Height",
       "field": "height",
       "type": "number",
-      "note": "cm"
+      "note": "cm",
+      "required": true
     },
     {
       "name": "Participated in previous experiment?",

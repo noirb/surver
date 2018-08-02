@@ -38,7 +38,7 @@
             xobj.send(data);
         };
 
-        var forceResize = function(delay = 5)
+        var forceResize = function(delay = 50)
         {
             var evt = window.document.createEvent('UIEvents');
             evt.initUIEvent('resize', true, false, window, 0);
@@ -59,7 +59,7 @@
                 <div class="md-subtitle" v-if="curr_survey.scales && curr_survey.scales[curr_question].explanation">{{curr_survey.scales[curr_question].explanation}}</div>
               </md-card-header>
               <div style="width:768px; height:256px;">
-                <canvas id="survey-canvas" ref="surveyCanvas" style="width:100%; height: 100%;" resize data-paper-resize="true" width="768" height="256" ></canvas>
+                <canvas id="survey-canvas" ref="surveyCanvas" style="width:100%; height: 100%;" width="768" height="256" ></canvas>
               </div>
               <md-progress-bar md-mode="determinate" v-if="Object.keys(curr_survey).length > 0 && curr_survey.scales" :md-value="100 * ((curr_question+1) / curr_survey.scales.length)"></md-progress-bar>
 
@@ -91,35 +91,19 @@
             </md-card-actions>
           </md-card>
 
-          <md-card v-if="curr_survey.type && curr_survey.type == 'vitaldata'">
+          <md-card v-if="curr_survey.type && curr_survey.type == 'formdata'">
               <md-card-header v-if="Object.keys(curr_survey).length">
                 <div class="md-title">{{curr_survey.title}}</div>
-                <div class="md-subtitle">Please fill in your vital stats</div>
+                <div class="md-subtitle">Please fill the following data</div>
               </md-card-header>
 
              <div style="margin: 40px; float:left; width: 50%;">
-                <md-field>
-                  <label>Age</label>
-                  <md-input name="participant-age" id="participant-age" v-model="participant_data.age" type="number" />
-                </md-field>
-                <md-field>
-                  <label>Sex</label>
-                  <md-select name="participant-sex" id="participant-sex" v-model="participant_data.sex" md-dense>
-                    <md-option></md-option>
-                    <md-option value="M">M</md-option>
-                    <md-option value="F">F</md-option>
-                  </md-select>
-                </md-field>
-                <md-field>
-                  <label>Height (cm)</label>
-                  <md-input name="participant-height" id="participant-height" v-model="participant_data.height" type="number" />
-                  <span class="md-suffix">cm</span>
-                </md-field>
-                <md-checkbox v-model="participant_data.previousboxparticipant">Participated in previous box turning experiments?</md-checkbox>
-                <md-checkbox v-model="participant_data.previousgazeparticipant">Participated in previous avatar gazing study?</md-checkbox>
+                <div v-for="(field, index) in formfields.fields">
+                    <component :is="field" :key="index"></component>
+                </div>
              </div> 
               <md-card-actions>
-                <md-button :disabled="participant_data.age == null || participant_data.sex == null || participant_data.height == null" class="md-raised md-primary" v-on:click="nextSurvey()" >Next <md-icon>arrow_forward</md-icon></md-button>
+                <md-button :disabled="!this.formfields.ready()" class="md-raised md-primary" v-on:click="nextSurvey()" >Next <md-icon>arrow_forward</md-icon></md-button>
               </md-card-actions>
           </md-card>
 
@@ -150,12 +134,114 @@
         return scope;
       }
 
+      // some small wrapper components for form fields
+      let BooleanField = function(fieldTitle, fieldName, notes, defaultValue = null)
+      {
+          return {
+            template: `
+            <md-checkbox v-model="value">{{title}} <span v-if="note != null">({{note}})</span></md-checkbox>
+            `,
+            data() {
+                return {
+                    title: fieldTitle,
+                    field: fieldName,
+                    note:  notes,
+                    value: defaultValue
+                }
+            },
+            watch: {
+                value: function(v) { Vue.set(this.$root.participant_data, this.field, (v == "on" ? true : false)); this.$root.$forceUpdate(); }
+            }
+        }
+      };
+      let NumericField = function(fieldTitle, fieldName, notes, defaultValue = null)
+      {
+          return {
+            template: `
+                    <md-field>
+                    <label>{{this.title}}</label>
+                    <md-input v-model="value" type="number" />
+                    <span class="md-suffix">{{note}}</span>
+                    </md-field>
+            `,
+            data() {
+                return {
+                    title: fieldTitle,
+                    field: fieldName,
+                    note:  notes,
+                    value: defaultValue
+                }
+            },
+            watch: {
+                value: {
+                    handler: function(v) {
+                          if (!Number.isNaN(Number.parseFloat(v)))
+                            Vue.set(this.$root.participant_data, this.field, Number.parseFloat(v));
+                          this.$root.$forceUpdate();
+                    },
+                    immediate: true
+                }
+            }
+        }
+      };
+      let StringField = function(fieldTitle, fieldName, notes, defaultValue = null)
+      {
+          return {
+              template: `
+                <md-field>
+                    <label>{{title}}</label>
+                    <md-input v-model="value"></md-input>
+                    <span class="md-helper-text">{{note}}</span>
+                </md-field>
+            `,
+            data() {
+                return {
+                    title: fieldTitle,
+                    field: fieldName,
+                    note: notes,
+                    value: defaultValue
+                }
+            },
+            watch: {
+                value: {
+                    handler: function(v) { Vue.set(this.$root.participant_data, this.field, v); this.$root.$forceUpdate();},
+                    immediate: true
+                }
+            }
+          }
+      };
+      let SelectionField = function(fieldTitle, fieldName, notes, options, defaultValue = null)
+      {
+          return {
+            template: `
+                <md-field>
+                  <label>{{title}}</label>
+                  <md-select v-model="value" md-dense>
+                    <md-option></md-option>
+                    <md-option v-for="(option,idx) in options" :key="option" :value="option">{{option}}</md-option>
+                  </md-select>
+                </md-field>
+            `,
+            data() {
+                return {
+                    title: fieldTitle,
+                    field: fieldName,
+                    note:  notes,
+                    options: options,
+                    value: defaultValue
+                }
+            },
+            watch: {
+                value: {
+                    handler: function(v) { Vue.set(this.$root.participant_data, this.field, v); this.$root.$forceUpdate();},
+                    immediate: true
+                }
+            }
+        }
+      };
 
       var data = {
         participant_data: {
-            age: null,
-            sex: null,
-            height: null,
             previousboxparticipant: false,
             previousgazeparticipant: false,
             group: "A",
@@ -170,6 +256,7 @@
         curr_survey: {},
         curr_survey_idx : 0,
         curr_question: 0,
+        formfields: [],
         visualizations: {},
         surveyOrder: [
             {
@@ -493,6 +580,42 @@
                             vm.$refs.nextBtn.disabled = false;
                             vm.participant_data.TLX.rankings[vm.curr_question] = v.toLowerCase();
                         });
+                    }
+                    else if (res.survey.type == 'formdata')
+                    {
+                        var requiredFields = [];
+                        vm.formfields = {
+                            ready: function() {
+                                let r = true;
+                                requiredFields.forEach(function(f) {
+                                    if (vm.participant_data[f] === null || vm.participant_data[f] === undefined)
+                                    {
+                                        r = false;
+                                        return;
+                                    }
+                                });
+                                if (r)
+                                    this.ready = function() { return true };
+                                return r;
+                            },
+                            fields: []
+                            };
+                        res.survey.fields.forEach(function(field) {
+                            if (field.required !== undefined && field.required)
+                                requiredFields.push(field.field);
+                            
+                            if (vm.participant_data[field.field] === undefined)
+                                vm.participant_data[field.field] = null;
+                            if (field.type == 'number')
+                                vm.formfields.fields.push(NumericField(field.name, field.field, field.note));
+                            else if (field.type == 'bool')
+                                vm.formfields.fields.push(BooleanField(field.name, field.field, field.note));
+                            else if (field.type == 'string')
+                                vm.formfields.fields.push(StringField(field.name, field.field, field.note));
+                            else if (field.type == 'selection')
+                                vm.formfields.fields.push(SelectionField(field.name, field.field, field.notes, field.options));
+                        });
+                        forceResize();
                     }
                 }
                 else
