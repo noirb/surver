@@ -1,6 +1,7 @@
 {
   "title": "Godspeed IV",
   "subtitle": "Perceived Intelligence",
+  "type" : "likert",
   "instructions": "Please rate your impression of the robot on these scales",
   "scales_range": [1, 2, 3, 4, 5],
   "scales": [

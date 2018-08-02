@@ -54,9 +54,11 @@
 
           <md-card :hidden="curr_survey.type != 'likert' && curr_survey.type != 'tlx' && curr_survey.type != 'tlxranking'" style="overflow:hidden">
               <md-card-header v-if="Object.keys(curr_survey).length">
+                <div class="md-toolbar" :md-elevation="1" v-if="curr_survey.subtitle"><span class="md-title">{{curr_survey.subtitle}}</span></div>
                 <div class="md-title" v-if="curr_survey.scales">{{curr_survey.scales[curr_question].title}}</div>
                 <div class="md-title" v-if="curr_survey.type == 'tlxranking'">Which of these two is more important to you?</div>
                 <div class="md-subtitle" v-if="curr_survey.scales && curr_survey.scales[curr_question].explanation">{{curr_survey.scales[curr_question].explanation}}</div>
+                <div class="md-subtitle" v-if="curr_survey.instructions">{{curr_survey.instructions}}</div>
               </md-card-header>
               <div style="width:768px; height:256px;">
                 <canvas id="survey-canvas" ref="surveyCanvas" style="width:100%; height: 100%;" width="768" height="256" ></canvas>
@@ -263,16 +265,25 @@
                 name: 'vitaldata_en'
             },
             {
-                name: 'boxbot_en'
+                name: 'godspeed_I_en'
+            },
+            {
+                name: 'godspeed_II_en'
+            },
+            {
+                name: 'godspeed_III_en'
+            },
+            {
+                name: 'godspeed_IV_en'
+            },
+            {
+                name: 'godspeed_V_en'
             },
             {
                 name: 'nasa_tlx_en'
             },
             {
                 name: 'pause'
-            },
-            {
-                name: 'boxbot_en'
             },
             {
                 name: 'nasa_tlx_en'

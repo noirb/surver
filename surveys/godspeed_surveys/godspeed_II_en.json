@@ -1,6 +1,7 @@
 {
   "title": "Godspeed II",
-  "subtitle": "Animiacy",
+  "subtitle": "Animacy",
+  "type" : "likert",
   "instructions": "Please rate your impression of the robot on these scales",
   "scales_range": [1, 2, 3, 4, 5],
   "scales": [

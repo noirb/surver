@@ -1,6 +1,7 @@
 {
   "title": "Godspeed V",
   "subtitle": "Perceived Safety",
+  "type" : "likert",
   "instructions": "Please rate your emotional state on these scales",
   "scales_range": [1, 2, 3, 4, 5],
   "scales": [

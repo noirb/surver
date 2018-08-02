@@ -1,15 +1,14 @@
 {
   "surveys" : [
     {"name" : "vitaldata_en",        "location" : "surveys/vital_data_en.json"},
-    {"name" : "boxbot_en",           "location" : "surveys/boxbot_survey1_en.json"},
+    {"name" : "pause",               "location" : "surveys/pause_en.json"},
+    {"name" : "comments",            "location" : "surveys/comments.json"},
+    {"name" : "finished",            "location" : "surveys/finished_en.json"},
     {"name" : "nasa_tlx_en",         "location" : "surveys/nasa_tlx_en.json"},
     {"name" : "nasa_tlx_ranking_en", "location" : "surveys/nasa_tlx_ranking_en.json"},
-    {"name" : "pause",               "location" : "surveys/pause_en.json"},
-    {"name" : "finished",            "location" : "surveys/finished_en.json"},
-    {"name" : "comments",            "location" : "surveys/comments.json"},
     {"name" : "godspeed_I_en",       "location" : "surveys/godspeed_surveys/godspeed_I_en.json"},
     {"name" : "godspeed_II_en",      "location" : "surveys/godspeed_surveys/godspeed_II_en.json"},
-    {"name" : "godpseed_III_en",     "location" : "surveys/godspeed_surveys/godspeed_III_en.json"},
+    {"name" : "godspeed_III_en",     "location" : "surveys/godspeed_surveys/godspeed_III_en.json"},
     {"name" : "godspeed_IV_en",      "location" : "surveys/godspeed_surveys/godspeed_IV_en.json"},
     {"name" : "godspeed_V_en",       "location" : "surveys/godspeed_surveys/godspeed_V_en.json"}
   ]
