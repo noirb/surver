@@ -57,11 +57,17 @@ See the `surveys` directory for several examples. Surveys are written in JSON, a
 ```
 
 **title** `optional` : The overall title of the survey. Not displayed next to questions.
+
 **subtitle** `optional` : Survey subtitle. Displayed with every question.
+
 **instructions** `optional` : General instructions which should be displayed next to every question.
+
 **type** `required` : Must be `likert`
+
 **scales_range** `required` : An array of discrete values used for participants' answers. The first value will be used for the left-most side of the scale, while the last value will be used for the right-most side of the scale.
+
 **scales** `required` : An array of the actual survey questions and labels for the min/max sides of the scale. The `title` field on individual questions is optional.
+
 
 ## Task Load Index Surveys
 
@@ -84,9 +90,13 @@ Included are the [NASA TLX](https://humansystems.arc.nasa.gov/groups/TLX/) surve
 ```
 
 **title** `optional` : The overall title of the survey. Not displayed next to questions.
+
 **type** `required` : Must be `tlx`
+
 **scales_range** `required` : An array of discrete values used for participants' answers. The first value will be used for the left-most side of the scale, while the last value will be used for the right-most side of the scale.
+
 **scales** `required` : An array of the actual survey questions and labels for the min/max sides of the scale. The `title` and `explanation` fields on individual questions are optional.
+
 
 ## Messages
 
@@ -101,7 +111,9 @@ To display a message in between surveys, you can use the `message` survey type. 
 ```
 
 **title** `optional` : A title to display at the top of the page (e.g. "Please Pause", "Wait For Instructions", etc).
+
 **type** `required` : Must be `message`
+
 **message** `optional` : A short text message to display to users.
 
 
@@ -161,7 +173,9 @@ Surveys with the `comments` type will present a large textbox for participants t
 Custom form fields can be created in order to collect specific data about a participant as part of a study.
 
 **title** `optional` : Title to be displayed at the top of the page.
+
 **type** `required` : Must be `formdata`
+
 **fields** `required` : Array of form fields.
 
 Several types of form fields are available:
@@ -180,10 +194,15 @@ Numeric Fields only accept numeric values. They will display an error state if t
 ```
 
 **name** `required` : The name of the field. Will be displayed as part of the field on the page.
+
 **field** `required` : The field name to store the entered data in (e.g. `height` will be written to `data[i].height` in the output file).
+
 **type** `required` : Must be `number`
+
 **note** `optional` : A small note to be displayed next to the field (e.g. to give additional instructions, unit label, etc)
+
 **required** `optional` : If `true`, the participant cannot move past the form until they give a value to this field.
+
 
 ### Selection Fields
 Selection fields provide a drop-down menu for users to select from a pre-defined set of options.
@@ -199,10 +218,15 @@ Selection fields provide a drop-down menu for users to select from a pre-defined
 ```
 
 **name** `required` : The name of the field. Will be displayed as part of the field on the page.
+
 **field** `required` : The field name to store the entered data in (e.g. `height` will be written to `data[i].height` in the output file).
+
 **type** `required` : Must be `selection`
+
 **options** `required` : An array of options available to choose from.
+
 **required** `optional` : If `true`, the participant cannot move past the form until they give a value to this field.
+
 
 ### Boolean Fields
 Boolean fields will display a checkbox for users to provide a clear yes/no answer to a question or statement.
@@ -216,8 +240,12 @@ Boolean fields will display a checkbox for users to provide a clear yes/no answe
 ```
 
 **name** `required` : The name of the field. Will be displayed as part of the field on the page.
+
 **field** `required` : The field name to store the entered data in.
+
 **type** `required` : Must be `bool`
+
+**required** `optional` : If `true`, the participant cannot move past the form until they give a value to this field.
 
 
 ### Text Fields
@@ -233,6 +261,11 @@ Text fields will display a small one-line textbox for users to enter text in.
 ```
 
 **name** `required` : The name of the field. Will be displayed as part of the field on the page.
+
 **field** `required` : The field name to store the entered data in.
+
 **type** `required` : Must be `string`
+
 **note** `optional` : A small bit of additional text to display alongside the field.
+
+**required** `optional` : If `true`, the participant cannot move past the form until they give a value to this field.
