@@ -289,13 +289,13 @@ Each time a user makes a selection for a question, a corresponding callback is c
 
 For simple surveys this may not be necessary (the scripts in `index.html` will automatically get a fresh ID for a participant when the page loads and send the participant's data to the server each time they complete a survey), but if you want to implement your own client-side behavior, or integrate surver with some existing client, you may need to handle some of the communication yourself.
 
-Surver responds to regular HTTP requests as normal, except **any** request with `$` in the URL string. Any URL containing `$` is assumed to contain a command the surver needs to handle itself. Commands follow the `$` and any preceding characters are ignored. Parameters can be passed to a command as JSON-formatted strings in a POST message.
+Surver responds to regular HTTP requests as normal, except **any** request with `$` in the URL string. Any URL containing `$` is assumed to contain a command the surver needs to handle itself. Commands follow the `$` and any preceding characters are ignored. Parameters can be passed to a command as JSON-formatted strings in a POST message. e.g. a request for `/$new_user` is identical to `/some/path/$new_user`.
 
 Every command will generate a response. All responses are JSON strings which contain, at minimum, a field labeled `status` which can be checked to verify the command was handled successfully. If no errors were encountered, `status` will contain the value `success`. If the command failed, `status` will contain a short message about why the command could not be processed.
 
 ### Surver Commands
 
-#### new_user
+#### `$new_user`
 
 ##### Parameters:
 `none`
@@ -311,7 +311,7 @@ Every command will generate a response. All responses are JSON strings which con
 
 Used to create a new entry in the server-side storage of survey data. Returns a new unique integer ID for the participant, and alternates between `"A"` and `"B"` for the participant's group name.
 
-#### list_surveys
+#### `$list_surveys`
 
 ##### Parameters:
 `none`
@@ -326,7 +326,7 @@ Used to create a new entry in the server-side storage of survey data. Returns a 
 
 Used to retrieve a list of all available surveys the surver can surve. Each survey can be assumed to be a valid survey name which can be passed to `get_survey`.
 
-#### get_survey
+#### `$get_survey`
 
 ##### Parameters:
 ```json
@@ -345,7 +345,7 @@ Used to retrieve a list of all available surveys the surver can surve. Each surv
 
 The `survey` field will contain the contents of the corresponding survey file (as defined in the surver config file) on the server. NOTE: The survey JSON will be parsed on the server-side before being sent.
 
-#### submit_result
+#### `$submit_result`
 
 ##### Parameters:
 ```json
