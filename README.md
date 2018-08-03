@@ -22,11 +22,13 @@ Integer IDs are created for each new connection to the surver, and if any existi
 
 #### NOTE:
 
-This surver was written with the intended environment being a *closed* network. Do NOT run this on a server with the intent of serving surveys over the general internet! The software is NOT secure and no guarantees can be made about your safety if you allow arbitrary connections. It was written to be very small and to support the minimum set of features necessary to serve surveys. For a more complete web server written in Nim which can actually be secured, see [mofuw](https://github.com/2vg/mofuw). Surver has also only been tested in single-client scenarios so far (i.e. one participant filling out a survey at a time, not multiple participants filling it out simultaneously) and it is very possible that multi-client use could uncover more bugs.
+This surver was written with the intended environment being a *closed* network. **Do NOT** run this on a server with the intent of serving surveys over the general internet! The software is NOT secure and no guarantees can be made about your safety if you allow arbitrary connections. It was written to be very small and to support the minimum set of features necessary to serve surveys in a closed lab context. If you need something more than that, you should use a real web server (e.g. [mofuw](https://github.com/2vg/mofuw) ).
+
+Surver has also only been tested in single-client scenarios so far (i.e. one participant filling out one survey at a time, not multiple participants filling surveys out simultaneously) and it is very possible that multi-client use could uncover more bugs.
 
 # Making Your Own Surveys
 
-See the `surveys` directory for several examples. Surveys are written in JSON, and the required fields vary a bit depending on the survey type.
+See the `surveys` directory for several examples. Surveys are written in JSON, and the required fields vary a bit depending on the survey type. The surveys displayed to users are defined by the `surveyOrder` field on the main client app data object (see the bottom of `index.html`).
 
 ## Likert Scale Surveys
 
@@ -269,3 +271,94 @@ Text fields will display a small one-line textbox for users to enter text in.
 **note** `optional` : A small bit of additional text to display alongside the field.
 
 **required** `optional` : If `true`, the participant cannot move past the form until they give a value to this field.
+
+
+# Advanced Usage
+
+There is not yet a nice and usable JS API for handling the surveys on the client side (if there is demand, though, this may be added in the future).
+
+### Changing the structure of the results data
+
+All information about the current participant and their survey answers is stored in `data.participant_data`. This includes some pre-existing fields for storing survey answers, and this is the data which is sent to the server to save the results after each survey. If you need some specific structure for your data or some default values to questions you plan to ask, this should be done here.
+
+### Callbacks on survey answers
+
+Each time a user makes a selection for a question, a corresponding callback is called. These are set in `loadSurvey` and essentially just write the answer into the correct field of `data.participant_data`. If you need to do something special, like display a message, perform some validation, or write the answer to a different field, you should replace the callbacks here.
+
+## Communicating With The Surver
+
+For simple surveys this may not be necessary (the scripts in `index.html` will automatically get a fresh ID for a participant when the page loads and send the participant's data to the server each time they complete a survey), but if you want to implement your own client-side behavior, or integrate surver with some existing client, you may need to handle some of the communication yourself.
+
+Surver responds to regular HTTP requests as normal, except **any** request with `$` in the URL string. Any URL containing `$` is assumed to contain a command the surver needs to handle itself. Commands follow the `$` and any preceding characters are ignored. Parameters can be passed to a command as JSON-formatted strings in a POST message.
+
+Every command will generate a response. All responses are JSON strings which contain, at minimum, a field labeled `status` which can be checked to verify the command was handled successfully. If no errors were encountered, `status` will contain the value `success`. If the command failed, `status` will contain a short message about why the command could not be processed.
+
+### Surver Commands
+
+#### new_user
+
+##### Parameters:
+`none`
+
+##### Response:
+```json
+{
+  "status" : "success",
+  "id"     : number,
+  "group"  : "A" / "B"
+}
+```
+
+Used to create a new entry in the server-side storage of survey data. Returns a new unique integer ID for the participant, and alternates between `"A"` and `"B"` for the participant's group name.
+
+#### list_surveys
+
+##### Parameters:
+`none`
+
+##### Response:
+```json
+{
+  "status"  : "success",
+  "surveys" : [ "survey_1", "survey_2" ]
+}
+```
+
+Used to retrieve a list of all available surveys the surver can surve. Each survey can be assumed to be a valid survey name which can be passed to `get_survey`.
+
+#### get_survey
+
+##### Parameters:
+```json
+{
+  "survey" : "survey_name"
+}
+```
+
+##### Response:
+```json
+{
+  "status" : "success",
+  "survey" : { ... }
+}
+```
+
+The `survey` field will contain the contents of the corresponding survey file (as defined in the surver config file) on the server. NOTE: The survey JSON will be parsed on the server-side before being sent.
+
+#### submit_result
+
+##### Parameters:
+```json
+{
+  ...
+}
+```
+
+##### Response:
+```json
+{
+  "status" : "success"
+}
+```
+
+The data sent to the server should be exactly the data you want stored for a given participant. It **must** include at minimum the `id` returned by `new_user` in order to update the correct record on the server-side. The rest of the data is free to be defined by you as you want (see `data.participant_data` for an example).
