@@ -1,0 +1,39 @@
+{
+  "title": "RoSAS - Discomfort",
+  "type" : "likert",
+  "subtitle": "Discomfort",
+  "scales_range": [0, 1, 2, 3, 4, 5, 6],
+  "instructions": "Please rate how well you feel the following traits describe the robot",
+  "scales": [
+    {
+        "title": "Awkward",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Scary",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Strange",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Awful",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Dangerous",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Aggressive",
+        "min": "Not at all",
+        "max": "Very much so"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "title": "RoSAS - Competence",
+  "type" : "likert",
+  "subtitle": "Competence",
+  "scales_range": [0, 1, 2, 3, 4, 5, 6],
+  "instructions": "Please rate how well you feel this trait describes the robot",
+  "scales": [
+    {
+        "title": "Reliable",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Competent",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Knowledgeable",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Interactive",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Responsive",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Capable",
+        "min": "Not at all",
+        "max": "Very much so"
+    }
+  ]
+}

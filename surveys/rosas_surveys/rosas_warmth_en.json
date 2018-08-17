@@ -1,0 +1,39 @@
+{
+  "title": "RoSAS - Warmth",
+  "type" : "likert",
+  "subtitle": "Warmth",
+  "scales_range": [0, 1, 2, 3, 4, 5, 6],
+  "instructions": "Please rate how well you feel the following traits describe the robot",
+  "scales": [
+    {
+        "title": "Organic",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Sociable",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Emotional",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Compassionate",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Happy",
+        "min": "Not at all",
+        "max": "Very much so"
+    },
+    {
+        "title": "Feeling",
+        "min": "Not at all",
+        "max": "Very much so"
+    }
+  ]
+}
