@@ -6,11 +6,14 @@
     <title>SURVEY!</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic|Material+Icons">
-    <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/vue-material.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/theme/default.css">
+    <link rel="stylesheet" href="https://unpkg.com/vue-material/dist/vue-material.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/vue-material/dist/theme/default.css">
 
     <script src="https://unpkg.com/vue"></script>
-    <script src="https://unpkg.com/vue-material@beta"></script>
+    <script src="https://unpkg.com/vue-material"></script>
+
+    <script type="text/javascript" src="js/qr-scanner.min.js"></script>
+    <script type="text/javascript" src="js/qr-scanner-worker.min.js"></script>
 
     <script type="text/javascript" src="js/paper-full.min.js"></script>
     <script type="text/javascript">
@@ -60,9 +63,9 @@
                 <div class="md-subtitle" v-if="curr_survey.scales && curr_survey.scales[curr_question].explanation">{{curr_survey.scales[curr_question].explanation}}</div>
                 <div class="md-subtitle" v-if="curr_survey.instructions">{{curr_survey.instructions}}</div>
               </md-card-header>
-              <div style="width:768px; height:256px;">
-                <canvas id="survey-canvas" ref="surveyCanvas" style="width:100%; height: 100%;" width="768" height="256" ></canvas>
-              </div>
+              <md-card-content>
+                <canvas id="survey-canvas" ref="surveyCanvas" style="width:100%; height: 256px;" width="768" height="256" resize></canvas>
+              </md-card-content>
               <md-progress-bar md-mode="determinate" v-if="Object.keys(curr_survey).length > 0 && curr_survey.scales" :md-value="100 * ((curr_question+1) / curr_survey.scales.length)"></md-progress-bar>
 
               <md-card-actions>
@@ -96,14 +99,14 @@
           <md-card v-if="curr_survey.type && curr_survey.type == 'formdata'">
               <md-card-header v-if="Object.keys(curr_survey).length">
                 <div class="md-title">{{curr_survey.title}}</div>
-                <div class="md-subtitle">Please fill the following data</div>
+                <div class="md-subtitle">Please fill in the following data</div>
               </md-card-header>
 
-             <div style="margin: 40px; float:left; width: 50%;">
+             <md-card-content >
                 <div v-for="(field, index) in formfields.fields">
                     <component :is="field" :key="index"></component>
                 </div>
-             </div> 
+             </md-card-content> 
               <md-card-actions>
                 <md-button :disabled="!this.formfields.ready()" class="md-raised md-primary" v-on:click="nextSurvey()" >Next <md-icon>arrow_forward</md-icon></md-button>
               </md-card-actions>
@@ -128,7 +131,7 @@
         scope.activate();
 
         // temp red dot
-        var c = new Path.Circle(paper.view.center, 45);
+        var c = new Path.Circle(scope.view.center, 45);
         c.fillColor = 'red';
         c.strokeColor = 'purple';
 
@@ -306,11 +309,12 @@
           drawLikert: function(scope, selectionCallback) {
             scope.activate();
             scope.project.activeLayer.removeChildren();
+
             var radius = 40;
             var padding = 50;
             var selections = [];
             this.curr_survey.scales_range.forEach((val,idx)=> {
-              selections.push(new Path.Circle(new Point(idx * ((scope.project.view.size.width-(2*padding)) / this.curr_survey.scales_range.length) + radius + padding, scope.project.view.center.y), radius)); 
+              selections.push(new Path.Circle(new Point(idx * ((scope.view.size.width-(2*padding)) / this.curr_survey.scales_range.length) + radius + padding, scope.view.center.y), radius)); 
               selections[selections.length-1].strokeColor = 'black';
               selections[selections.length-1].fillColor = 'white';
               selections[selections.length-1].strokeWidth = 5;
@@ -347,16 +351,17 @@
             txtMax.justification = 'center';
             txtMax.content = this.curr_survey.scales[this.curr_question].max
 
-            scope.project.view.draw();
+            scope.view.draw();
             console.log('Question vis update complete');
           },
           drawTLX: function(scope, selectionCallback) {
             console.log("Drawing tlx...");
             scope.activate();
             scope.project.activeLayer.removeChildren();
-            var entryWidth = 30;
+            var scaleRatio = scope.view.bounds.width / 800;
+            var entryWidth = 30 * scaleRatio;
             var entryHeight = 30;
-            var padding = 50;
+            var padding = 50 * scaleRatio;
             var selections = [];
             var lines = [];
             this.curr_survey.scales_range.forEach((val,idx)=> {
@@ -538,14 +543,18 @@
           },
           loadSurvey: function(survey, onAnswer) {
             console.log('Loading survey: ', survey);
+            forceResize();
             postData('$get_survey', '{"survey":"' + survey + '"}', (res)=> {
                 if (res.status == "success")
                 {
                     vm.$set(vm, 'curr_survey', res.survey);
                     vm.$set(vm, 'curr_question', 0)
+                    forceResize();
+
+                    setTimeout(() => {
                     if (res.survey.type == 'likert')
                     {
-                        forceResize();
+                        
                         var scenario = -1;
                         if (vm.participant_data.surveys.length > 0)
                             scenario = vm.participant_data.surveys[vm.participant_data.surveys.length-1].scenario === 1 ? 2 : 1;
@@ -560,8 +569,7 @@
                             console.log(vm.curr_question, v);
                             vm.$refs.nextBtn.disabled = false;
                             vm.participant_data.surveys[vm.participant_data.surveys.length-1].answers[vm.curr_question] = v;
-                         });
-                        forceResize();
+                        });
                     }
                     else if (res.survey.type == 'tlx')
                     {
@@ -628,12 +636,14 @@
                         });
                         forceResize();
                     }
+                    vm.working = false;
+                  }, 100);
                 }
                 else
                 {
                     console.log(res.status);
+                    vm.working = false;
                 }
-                vm.working = false;
             });
           },
           nextSurvey: function() {
