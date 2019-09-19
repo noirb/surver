@@ -265,6 +265,9 @@
         visualizations: {},
         surveyOrder: [
             {
+                name: 'nasa_tlx_ranking_en'
+            },
+            {
                 name: 'vitaldata_en'
             },
             {
@@ -310,8 +313,9 @@
             scope.activate();
             scope.project.activeLayer.removeChildren();
 
-            var radius = 40;
-            var padding = 50;
+            var scaleRatio = scope.view.bounds.width / 800;
+            var radius = 40*scaleRatio;
+            var padding = 50*scaleRatio;
             var selections = [];
             this.curr_survey.scales_range.forEach((val,idx)=> {
               selections.push(new Path.Circle(new Point(idx * ((scope.view.size.width-(2*padding)) / this.curr_survey.scales_range.length) + radius + padding, scope.view.center.y), radius)); 
@@ -339,14 +343,16 @@
             bgLine.sendToBack();
 
             var txtMin = new PointText(selections[0].position);
-            txtMin.position.y += radius*2;
+            txtMin.position.y += radius*2+padding/2;
             txtMin.fontWeight = 'bold';
+            txtMin.fontSize = 32;
             txtMin.fillColor = new Color(0.25, 0.25, 0.25);
             txtMin.justification = 'center';
             txtMin.content = this.curr_survey.scales[this.curr_question].min
             var txtMax = new PointText(selections[selections.length-1].position);
-            txtMax.position.y += radius*2;
+            txtMax.position.y += radius*2+padding/2;
             txtMax.fontWeight = 'bold';
+            txtMax.fontSize = 32;
             txtMax.fillColor = new Color(0.25, 0.25, 0.25);
             txtMax.justification = 'center';
             txtMax.content = this.curr_survey.scales[this.curr_question].max
@@ -415,14 +421,18 @@
             underBar.strokeColor = 'black';
 
             var txtMin = new PointText(lines[0].position);
-            txtMin.position.y += entryHeight;
+            txtMin.position.x += 10;
+            txtMin.position.y += entryHeight*2;
             txtMin.fontWeight = 'bold';
+            txtMin.fontSize = 24*scaleRatio;
             txtMin.fillColor = new Color(0.25, 0.25, 0.25);
             txtMin.justification = 'center';
             txtMin.content = this.curr_survey.scales[this.curr_question].min
             var txtMax = new PointText(lines[lines.length-1].position);
-            txtMax.position.y += entryHeight;
+            txtMax.position.x -= 10;
+            txtMax.position.y += entryHeight*2;
             txtMax.fontWeight = 'bold';
+            txtMax.fontSize = 24*scaleRatio;
             txtMax.fillColor = new Color(0.25, 0.25, 0.25);
             txtMax.justification = 'center';
             txtMax.content = this.curr_survey.scales[this.curr_question].max
@@ -434,8 +444,10 @@
             console.log("Drawing tlx ranking...");
             scope.activate();
             scope.project.activeLayer.removeChildren();
-            var entryWidth = 140;
-            var entryHeight = 100;
+
+            var scaleRatio = scope.view.bounds.width / 800;
+            var entryWidth = 140 * scaleRatio;
+            var entryHeight = 100 * scaleRatio;
             var padding = scope.project.view.size.width / 3;
             var selections = [];
             var txts = [];
@@ -457,6 +469,7 @@
 
               var txt = new PointText(rect.position);
               txt.fontWeight = 'bold';
+              txt.fontSize = 12*scaleRatio;
               txt.fillColor = defaultBorder;
               txt.justification = 'center';
               txt.content = this.curr_survey.scales[this.curr_question][idx]
@@ -502,8 +515,9 @@
               txt.onMouseDown   = onDown;
 
               var description = new PointText(new Point(rect.position.x - entryWidth+16, rect.position.y + entryHeight*0.5 + 20));
+              description.fontSize = 15*scaleRatio;
               // break description into lines
-              var maxLineLen = 40;
+              var maxLineLen = 38;
               var last = 0;
               while(1) {
                 if (maxLineLen + last > this.curr_survey.descriptions[this.curr_survey.scales[this.curr_question][idx]].length)
