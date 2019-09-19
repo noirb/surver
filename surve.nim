@@ -1,4 +1,4 @@
-import asynchttpserver, asyncdispatch, system, json, strutils
+import asynchttpserver, asyncdispatch, system, json, strutils, os
 import gcap
 
 var basePage: string
@@ -83,6 +83,25 @@ proc doCmd(cmd: string, data: string): string =
 
   return $(%* {"status": "Failed: Unknown command"})
 
+proc contentType(filename: string): string =
+    var ext = splitFile(filename).ext
+    case(ext):
+        of ".css":
+            return "text/css"
+        of ".xml":
+            return "text/xml"
+        of ".js":
+            return "text/javascript"
+        of ".png":
+            return "image/png"
+        of ".html":
+            return "text/html"
+        of ".htm":
+            return "text/html"
+        of ".txt":
+            return "text/plain"
+    return ""
+
 proc cb(req: Request) {.async, gcsafe.} =
 #  echo(req)
   if req.url.path.contains('$'):
@@ -91,7 +110,7 @@ proc cb(req: Request) {.async, gcsafe.} =
     var targetFile = "." & req.url.path # haha security
     try:
       let resContent = readFile(targetFile)
-      await req.respond(Http200, resContent)
+      await req.respond(Http200, resContent, newHttpHeaders([("Content-Type",contentType(targetFile))]))
     except:
       await req.respond(Http404, "Not found, yo!")
   else:
