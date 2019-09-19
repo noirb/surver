@@ -43,6 +43,25 @@ proc doCmd(cmd: string, data: string): string =
       participant_data.add(%*{"id": id, "group": group})
       echo("\t" & $id & " : Group " & group);
       return $(%* {"id": id, "group": group, "status": "success"})
+    of "register_user":
+        var res = %*{"status":"success"}
+        echo("\tUser Registration: " & data)
+        var jdata = parseJson(data)
+
+        if "id" in jdata:
+            # check for existing participant
+            for p in participant_data.mitems:
+                if p["id"].getStr() == jdata["id"].getStr():
+                    res.add("overwrite", %true)
+                    p = %*jdata
+                    return $res # found existing participant
+
+            # create new participant
+            res.add("create_new", %true)
+            participant_data.add(%*jdata)
+        else:
+            return $(%*{"status": "Failed: No user ID specified"})
+        return $res
     of "get_survey":
       var jdata = parseJson(data)
       echo("\t" & jdata["survey"].getStr())
